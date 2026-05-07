@@ -1,0 +1,76 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply font-body;
+    overscroll-behavior-y: none;
+  }
+  h1,
+  h2,
+  h3 {
+    @apply font-display;
+  }
+  button {
+    @apply select-none;
+  }
+}
+
+@layer components {
+  .tap-target {
+    @apply min-h-11 min-w-11;
+  }
+  .card {
+    @apply rounded-3xl bg-white/90 dark:bg-slate-800/80 shadow-lg backdrop-blur;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-sm font-semibold;
+  }
+}
+
+/* Heart particle burst variables, used inline by JS-rendered spans. */
+.heart-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 18px;
+  z-index: 50;
+  --dx: 0px;
+  --dy: 0px;
+  animation: particleFly 0.7s ease-out forwards;
+}
+
+@keyframes particleFly {
+  0% {
+    transform: translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(var(--dx), var(--dy)) scale(0.3);
+    opacity: 0;
+  }
+}
+
+/* Mouth pulse — a gentle stroke pulse when the mouth state changes. */
+@keyframes mouthPulse {
+  0%, 100% { stroke-width: 3; }
+  50% { stroke-width: 5.5; }
+}
+.mouth-pulse {
+  animation: mouthPulse 0.4s ease-out;
+}
+
+/* Tear drop entrance. */
+@keyframes tearDrop {
+  0% { opacity: 0; transform: translateY(-8px) scale(0.4); }
+  60% { opacity: 1; transform: translateY(2px) scale(1.1); }
+  100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+.tear-show {
+  animation: tearDrop 0.45s ease-out forwards;
+}

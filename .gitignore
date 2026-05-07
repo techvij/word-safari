@@ -1,0 +1,19 @@
+node_modules
+dist
+dist-ssr
+.wrangler
+.dev.vars
+.env
+.env.local
+.env.*.local
+*.log
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# TypeScript incremental build cache + emit from `tsc -b` on vite.config.ts
+*.tsbuildinfo
+vite.config.d.ts
+vite.config.js
