@@ -8,12 +8,17 @@ const WIKI_HEADERS: HeadersInit = {
   'Api-User-Agent': 'WordSafari/1.0 (https://github.com/techvij/word-safari; contact via GitHub)',
 };
 
+const FETCH_TIMEOUT_MS = 8000;
+
 export type WikiResult = ResolvedImage & { extract?: string };
 
 export async function resolveWikipedia(word: string, override?: string): Promise<WikiResult | null> {
   const title = override ?? word;
   try {
-    const r = await fetch(SUMMARY(title), { headers: WIKI_HEADERS });
+    const r = await fetch(SUMMARY(title), {
+      headers: WIKI_HEADERS,
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     if (!r.ok) return null;
     const data: WikiSummary = await r.json();
     const url = data.thumbnail?.source ?? data.originalimage?.source ?? null;

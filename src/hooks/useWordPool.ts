@@ -36,9 +36,62 @@ const ASIAN_CATEGORIES: Record<Category, string[]> = {
   sports: ['Chinese_martial_arts', 'Japanese_martial_arts', 'Korean_martial_arts', 'Indian_martial_arts'],
 };
 
+// Per-category denylist for Wikipedia titles that pass the structural filter
+// but aren't in the spirit of the category. Most prominent: Wikipedia's
+// martial-arts categories include the WEAPONS used in those arts (Katar, Urumi,
+// Katana, Naginata, Jian, Dao, …) alongside the actual disciplines. Kids are
+// guessing the practice, not the weapon. Add to this list as you spot more.
+const NOISE_DENYLIST: Record<Category, ReadonlySet<string>> = {
+  cities: new Set<string>(),
+  animals: new Set<string>(),
+  foods: new Set<string>(),
+  sports: new Set<string>([
+    // Indian
+    'Katar',
+    'Urumi',
+    'Talwar',
+    'Madu',
+    'Khanda',
+    'Chakram',
+    'Aruval',
+    'Lathi',
+    'Valari',
+    // Japanese
+    'Katana',
+    'Wakizashi',
+    'Naginata',
+    'Bokken',
+    'Shuriken',
+    'Sai',
+    'Tonfa',
+    'Kama',
+    'Nunchaku',
+    'Kusarigama',
+    'Tanto',
+    'Bo',
+    'Jo',
+    'Yumi',
+    // Chinese
+    'Jian',
+    'Dao',
+    'Hudiedao',
+    'Liuyedao',
+    'Zhanmadao',
+    'Guandao',
+    'Podao',
+    'Niuweidao',
+    // Korean
+    'Wolto',
+    'Hyeopdo',
+    'Geom',
+  ]),
+};
+
 /** Reject Wikipedia titles that aren't fun "guess the word" candidates. */
-export function isGuessable(title: string): boolean {
+export function isGuessable(title: string, category?: Category): boolean {
   if (!title) return false;
+  // Per-category denylist (e.g. weapons inside martial-arts categories).
+  if (category && NOISE_DENYLIST[category].has(title)) return false;
   const lower = title.toLowerCase();
   // Reject overview / list / history articles
   if (
@@ -89,7 +142,7 @@ async function fetchAsianPool(category: Category): Promise<string[]> {
   for (const r of settled) {
     if (r.status === 'fulfilled') {
       for (const t of r.value) {
-        if (isGuessable(t)) out.add(t);
+        if (isGuessable(t, category)) out.add(t);
       }
     }
   }

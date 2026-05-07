@@ -13,6 +13,12 @@ const WIKI_HEADERS: HeadersInit = {
   'Api-User-Agent': 'WordSafari/1.0 (https://github.com/techvij/word-safari; contact via GitHub)',
 };
 
+// Fetches without a timeout hang forever when the user goes offline mid-request
+// (the browser keeps the connection pending hoping the network comes back).
+// 8s is comfortably above Wikipedia's typical p99 latency but short enough
+// that a stalled load_failed dispatch happens before the user gets confused.
+const FETCH_TIMEOUT_MS = 8000;
+
 export type WikiSummary = {
   title: string;
   displaytitle?: string;
@@ -41,7 +47,10 @@ export async function fetchCategoryMembers(category: string, limit = 500): Promi
     format: 'json',
     origin: '*',
   });
-  const r = await fetch(`${WIKI_API}?${params}`, { headers: WIKI_HEADERS });
+  const r = await fetch(`${WIKI_API}?${params}`, {
+    headers: WIKI_HEADERS,
+    signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+  });
   if (!r.ok) throw new Error(`Wikipedia category fetch failed: ${r.status}`);
   const data: CategoryMembersResponse = await r.json();
   const members = data.query?.categorymembers ?? [];
@@ -52,7 +61,10 @@ export async function fetchCategoryMembers(category: string, limit = 500): Promi
 export async function fetchSummary(title: string): Promise<WikiSummary | null> {
   const url = `${WIKI_REST}/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`;
   try {
-    const r = await fetch(url, { headers: { ...WIKI_HEADERS, accept: 'application/json' } });
+    const r = await fetch(url, {
+      headers: { ...WIKI_HEADERS, accept: 'application/json' },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
+    });
     if (!r.ok) return null;
     return (await r.json()) as WikiSummary;
   } catch {

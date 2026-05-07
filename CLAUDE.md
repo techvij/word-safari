@@ -6,6 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Word Safari** — a React + TypeScript rebuild of the kids' word-guessing game (originally vanilla HTML/CSS/JS at `../hangman/`). Theme: Asian cities, sports, animals, foods. The two repos are independent — this one does not import from the parent.
 
+- **Repo**: <https://github.com/techvij/word-safari> (public, MIT)
+- **Default branch**: `main`
+- **Target host**: Cloudflare Pages (`wrangler.toml` already pins `pages_build_output_dir = "dist"`)
+
 ## Commands
 
 ```sh
@@ -19,10 +23,6 @@ npm run pages:dev    # wrangler pages dev — needed to exercise the Cloudflare 
 
 There is no test runner. Verification is done via the dev server + manual playthrough; `tsc --noEmit` is the static-analysis gate.
 
-## Stale README warning
-
-`README.md` still describes a static word list at `src/data/words.json` and an `images-manifest.json`. **Both files were deleted.** Words are now fetched live from Wikipedia per category (see "Dynamic content" below). Don't go looking for those files.
-
 ## Architecture: the load-bearing pieces
 
 ### Single state machine (`src/hooks/useGameState.tsx`)
@@ -33,7 +33,7 @@ All game state lives in one `useReducer`. Phases: `'menu' | 'loading' | 'playing
 
 `src/hooks/useWordPool.ts` declares `ASIAN_CATEGORIES` — a map from game category to a list of Wikipedia category slugs (`Capital_cities_in_Asia`, `Mammals_of_Asia`, `Japanese_cuisine`, `Korean_martial_arts`, etc.). On category select, `useWordPool` calls Wikipedia's `categorymembers` endpoint via `src/lib/wikipedia.ts`, merges + dedupes results, and runs every title through `isGuessable()` (rejects list/overview pages, parenthetical disambigs, multi-word titles >3 words, etc.). Pool is cached in TanStack Query (24h staleTime).
 
-Per-round, `startRound` calls `fetchSummary(title)` to pull the kid-friendly extract + image. **All Wikipedia API calls are CORS-friendly and key-free** — no proxy needed.
+Per-round, `startRound` calls `fetchSummary(title)` to pull the extract + image. **All Wikipedia API calls are CORS-friendly and key-free** — no proxy needed. Every fetch sends an `Api-User-Agent` header per Wikipedia's User-Agent policy (browsers can't override the actual `User-Agent` from `fetch()`); the value is hardcoded in `src/lib/wikipedia.ts`, `src/lib/images/wikipedia.ts`, and `src/lib/images/commons.ts` — keep them in sync.
 
 ### Cascading image resolver (`src/hooks/useImageResolver.ts` + `src/lib/images/*.ts`)
 
@@ -56,7 +56,9 @@ Server-side proxies for anything that needs an API key. Three endpoints today:
 - `pexels.ts` — proxies Pexels search, injects `PEXELS_API_KEY`.
 - `kid-fact.ts` — receives `{ title, extract }`, calls Anthropic's `/v1/messages` with `claude-opus-4-7` (override via `ANTHROPIC_KID_FACT_MODEL`, e.g. `claude-haiku-4-5` for cost), returns `{ kidFact }` — one short kid-friendly sentence.
 
-**API keys are server-only.** They live in Cloudflare Pages env vars (production + preview) and `.dev.vars` for local `wrangler pages dev`. Never imported client-side. In Vite dev (`npm run dev`), the function endpoints don't exist — clients gracefully fall back: kid-fact → Wikipedia first sentence, Unsplash/Pexels → next source in cascade.
+The kid-fact client (`src/lib/kid-fact.ts`) is **gated by the build-time env var `VITE_KID_FACT_ENABLED`**. When unset (the Tier 1 default — no Anthropic key), the client returns `null` immediately without hitting `/api/kid-fact`, so deploys without the key don't pay a 503 round-trip per round. Set `VITE_KID_FACT_ENABLED=true` AND `ANTHROPIC_API_KEY=…` together for the rewriter to actually run.
+
+**API keys are server-only.** They live in Cloudflare Pages env vars (production + preview) and `.dev.vars` for local `wrangler pages dev`. Never imported client-side. In Vite dev (`npm run dev`), the function endpoints don't exist — clients gracefully fall back: kid-fact returns null → Wikipedia first sentence renders; Unsplash/Pexels → next source in cascade.
 
 ### Mascot system (`src/components/game/Mascot.tsx`)
 
@@ -90,17 +92,21 @@ When adding a transient animation (shake, hop, etc.), use a **nonce counter** in
 
 ## Env vars
 
-Client-side (prefix `VITE_`, exposed to browser):
-- `VITE_WORDS_URL` — *legacy*, ignored by current code (lookup is via Wikipedia now). Listed in `.env.example` for compatibility but not read.
+Client-side (prefix `VITE_`, inlined at build time and exposed to the browser):
+- `VITE_KID_FACT_ENABLED` — `"true"` to activate the AI fact rewriter. Default unset → client never hits `/api/kid-fact`. Pair with `ANTHROPIC_API_KEY` below.
 
-Server-side (Cloudflare Pages secrets, never bundled):
+Server-side (Cloudflare Pages secrets, never bundled, evaluated per-request by Functions):
 - `UNSPLASH_ACCESS_KEY` — for `/api/unsplash`
 - `PEXELS_API_KEY` — for `/api/pexels`
-- `ANTHROPIC_API_KEY` — for `/api/kid-fact` (optional; without it, fact falls back to Wikipedia first sentence)
+- `ANTHROPIC_API_KEY` — for `/api/kid-fact` (without it, function returns 503; client gates above so it doesn't hit the function at all)
 - `ANTHROPIC_KID_FACT_MODEL` — optional override, default `claude-opus-4-7`
 
-For local dev with Functions, copy `.env.example` → `.dev.vars` and run `npm run pages:dev`.
+`src/vite-env.d.ts` declares the `ImportMetaEnv` shape — extend it when adding new `VITE_*` vars so `tsc` can typecheck them.
+
+For local dev with Functions, copy `.env.example` → `.dev.vars` and run `npm run pages:dev`. For client-side dev without Functions, plain `npm run dev` is fine and the kid-fact / Unsplash / Pexels paths gracefully no-op.
 
 ## Deploy
 
-Cloudflare Pages. Connect the repo, set build = `npm run build`, output = `dist`. The `wrangler.toml` already pins `pages_build_output_dir = "dist"`. Add the server-side env vars in the Pages dashboard for both Production and Preview environments before going live.
+Cloudflare Pages. Connect the repo (<https://github.com/techvij/word-safari>), set build = `npm run build`, output = `dist`. The `wrangler.toml` already pins `pages_build_output_dir = "dist"`. Tier 1 needs no env vars; higher tiers add `ANTHROPIC_API_KEY` + `VITE_KID_FACT_ENABLED=true` for the rewriter, and optionally `UNSPLASH_ACCESS_KEY` + `PEXELS_API_KEY` for image fallbacks. See the README's tier table.
+
+`public/favicon.svg` and `public/og-image.svg` are static assets served by Vite — emoji-based SVGs that work on any platform that supports SVG. If you need PNG variants for picky social-card scrapers (Twitter, Facebook), generate from these SVGs and update the `<meta property="og:image">` and `<link rel="icon">` paths in `index.html`.
