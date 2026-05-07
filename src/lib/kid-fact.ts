@@ -4,6 +4,12 @@ import { get, set } from 'idb-keyval';
 // so we can cache aggressively. Edge cache headers also keep responses warm.
 const TTL = 1000 * 60 * 60 * 24 * 30;
 
+// Build-time gate. Set VITE_KID_FACT_ENABLED=true in your build environment to
+// activate the rewriter. Without it (the default — Tier 1 deploys), this hook
+// returns null immediately so the caller falls back to the Wikipedia first
+// sentence WITHOUT spending a network round-trip on a guaranteed-503.
+const ENABLED = import.meta.env.VITE_KID_FACT_ENABLED === 'true';
+
 type CacheEntry = { fact: string; at: number };
 
 function cacheKey(title: string): string {
@@ -11,6 +17,8 @@ function cacheKey(title: string): string {
 }
 
 export async function fetchKidFact(title: string, extract: string): Promise<string | null> {
+  if (!ENABLED) return null;
+
   const key = cacheKey(title);
 
   try {

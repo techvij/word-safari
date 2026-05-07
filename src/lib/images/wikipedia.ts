@@ -3,12 +3,17 @@ import type { ResolvedImage, WikiSummary } from '../types';
 const SUMMARY = (title: string) =>
   `https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`;
 
+const WIKI_HEADERS: HeadersInit = {
+  accept: 'application/json',
+  'Api-User-Agent': 'WordSafari/1.0 (https://github.com/techvij/word-safari; contact via GitHub)',
+};
+
 export type WikiResult = ResolvedImage & { extract?: string };
 
 export async function resolveWikipedia(word: string, override?: string): Promise<WikiResult | null> {
   const title = override ?? word;
   try {
-    const r = await fetch(SUMMARY(title), { headers: { accept: 'application/json' } });
+    const r = await fetch(SUMMARY(title), { headers: WIKI_HEADERS });
     if (!r.ok) return null;
     const data: WikiSummary = await r.json();
     const url = data.thumbnail?.source ?? data.originalimage?.source ?? null;

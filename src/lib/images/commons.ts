@@ -11,6 +11,10 @@ type CommonsResponse = {
   };
 };
 
+const COMMONS_HEADERS: HeadersInit = {
+  'Api-User-Agent': 'WordSafari/1.0 (https://github.com/techvij/word-safari; contact via GitHub)',
+};
+
 export async function resolveCommons(query: string): Promise<ResolvedImage | null> {
   const params = new URLSearchParams({
     action: 'query',
@@ -25,7 +29,7 @@ export async function resolveCommons(query: string): Promise<ResolvedImage | nul
     iiurlwidth: '480',
   });
   try {
-    const r = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`);
+    const r = await fetch(`https://commons.wikimedia.org/w/api.php?${params}`, { headers: COMMONS_HEADERS });
     if (!r.ok) return null;
     const data: CommonsResponse = await r.json();
     const pages = Object.values(data.query?.pages ?? {});

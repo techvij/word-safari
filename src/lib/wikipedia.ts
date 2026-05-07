@@ -4,6 +4,15 @@
 const WIKI_API = 'https://en.wikipedia.org/w/api.php';
 const WIKI_REST = 'https://en.wikipedia.org/api/rest_v1';
 
+// Wikipedia's API policy asks browser clients to identify themselves via
+// `Api-User-Agent` (the actual `User-Agent` is set by the browser and can't
+// be overridden from fetch()). Adding this triggers a one-time CORS preflight
+// per origin per session, then is cached. See:
+//   https://meta.wikimedia.org/wiki/User-Agent_policy
+const WIKI_HEADERS: HeadersInit = {
+  'Api-User-Agent': 'WordSafari/1.0 (https://github.com/techvij/word-safari; contact via GitHub)',
+};
+
 export type WikiSummary = {
   title: string;
   displaytitle?: string;
@@ -32,7 +41,7 @@ export async function fetchCategoryMembers(category: string, limit = 500): Promi
     format: 'json',
     origin: '*',
   });
-  const r = await fetch(`${WIKI_API}?${params}`);
+  const r = await fetch(`${WIKI_API}?${params}`, { headers: WIKI_HEADERS });
   if (!r.ok) throw new Error(`Wikipedia category fetch failed: ${r.status}`);
   const data: CategoryMembersResponse = await r.json();
   const members = data.query?.categorymembers ?? [];
@@ -43,7 +52,7 @@ export async function fetchCategoryMembers(category: string, limit = 500): Promi
 export async function fetchSummary(title: string): Promise<WikiSummary | null> {
   const url = `${WIKI_REST}/page/summary/${encodeURIComponent(title.replace(/ /g, '_'))}`;
   try {
-    const r = await fetch(url, { headers: { accept: 'application/json' } });
+    const r = await fetch(url, { headers: { ...WIKI_HEADERS, accept: 'application/json' } });
     if (!r.ok) return null;
     return (await r.json()) as WikiSummary;
   } catch {

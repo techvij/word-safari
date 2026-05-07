@@ -1,47 +1,69 @@
-# Word Safari (React rebuild)
+# Word Safari
 
-The next-level rebuild of [Word Safari](../) — same kid-friendly word-guessing game, now powered by React + TypeScript with a multi-source dynamic image layer.
+A kid-friendly word-guessing game (ages 6–12), themed around Asia. Pick a category — cities, sports, animals, or foods — pick a difficulty, and guess the word one letter at a time before the panda runs out of chances.
+
+> **No static word list.** Words, facts, and pictures are pulled live from Wikipedia + Wikimedia Commons every round.
 
 ## Stack
 
-- **Vite + React 18 + TypeScript** — fast dev loop, no SEO need.
-- **Tailwind CSS** — mobile-first responsive utilities, dark mode, design system.
-- **Framer Motion** — declarative animations replacing the imperative `classList + setTimeout` pattern from the original.
-- **TanStack Query + idb-keyval** — caches resolved images so repeat words are instant.
-- **Cloudflare Pages Functions** — serverless proxy for Unsplash/Pexels API keys.
+- **Vite + React 18 + TypeScript**
+- **Tailwind CSS** — mobile-first responsive utilities, dark mode, custom palette
+- **Framer Motion** — declarative state-driven animations (mascot, hearts, confetti, screen transitions)
+- **TanStack Query + idb-keyval** — caches resolved images and word pools across sessions
+- **Cloudflare Pages Functions** — serverless proxies for the optional API-keyed sources (Unsplash, Pexels, Anthropic)
 
-## Image resolution chain
+## Live data flow
 
-`useImage()` cascades through sources, takes the first hit, and caches in IndexedDB:
-
-1. Local manifest (`/public/images/<category>/<slug>/`)
-2. Wikipedia REST summary
-3. Wikimedia Commons search
-4. Unsplash (`/api/unsplash` proxy)
-5. Pexels (`/api/pexels` proxy)
-6. Emoji fallback
+| What | Source | Notes |
+| --- | --- | --- |
+| Words | Wikipedia `categorymembers` API | ~1500 Asia-tagged candidates filtered down by length + a "guessable title" check (`isGuessable` in [`useWordPool.ts`](src/hooks/useWordPool.ts)) |
+| Facts | Wikipedia REST summary `extract` field | First sentence is shown verbatim; if `ANTHROPIC_API_KEY` is set, the [`/api/kid-fact`](functions/api/kid-fact.ts) function rewrites it as one short kid-friendly sentence via Claude |
+| Pictures | 6-source cascade with IndexedDB cache (7-day TTL) | Local override → Wikipedia → Wikimedia Commons → Unsplash → Pexels → emoji fallback. See [`useImageResolver.ts`](src/hooks/useImageResolver.ts) |
+| Sounds | Synthesized in-browser via Web Audio | Zero asset bytes |
 
 ## Run locally
 
 ```sh
 npm install
-npm run dev
+npm run dev          # http://localhost:5173
+npm run build        # tsc -b && vite build → dist/
+npm run lint         # tsc --noEmit
+npm run pages:dev    # wrangler pages dev — needed to test Cloudflare Functions
 ```
 
-Then open <http://localhost:5173>.
+There is no static word list to maintain. To add Asia content, edit the `ASIAN_CATEGORIES` map in [`src/hooks/useWordPool.ts`](src/hooks/useWordPool.ts) — point at any Wikipedia category whose members are guessable single-or-double-word titles.
 
-## Deploy
+## Deploy on Cloudflare Pages
 
-Set `UNSPLASH_ACCESS_KEY` and `PEXELS_API_KEY` in the Cloudflare Pages dashboard (production + preview), point the build at `npm run build`, and deploy. `pages_build_output_dir` is `dist`.
+1. Connect the repo at <https://dash.cloudflare.com> → Workers & Pages → Create → Pages.
+2. Build command: `npm run build` &nbsp;·&nbsp; Build output directory: `dist`.
+3. The `wrangler.toml` already pins `pages_build_output_dir = "dist"`.
+4. (Optional) set environment variables — see tier table below.
 
-## Adding content
+### Three tiers of polish
 
-Append to `src/data/words.json`:
+The app works at every tier; higher tiers add nicer fact text and broader image coverage.
 
-```json
-{ "word": "Bao", "category": "foods", "emoji": "🥟", "fact": "...", "wiki": "Baozi" }
-```
+| Tier | Env vars to set | What you get |
+| --- | --- | --- |
+| **1. Free** (default) | none | Works fully. Words from Wikipedia, facts as Wikipedia first-sentence (sometimes academic tone), photos from Wikipedia + Commons + emoji |
+| **2. Kid-friendly facts** | `ANTHROPIC_API_KEY` + `VITE_KID_FACT_ENABLED=true` | Adds the AI rewriter. Each round's fact is rewritten by Claude as one short sentence a 7-year-old would enjoy. ~$0.0004/round on Haiku 4.5 (set via `ANTHROPIC_KID_FACT_MODEL`) |
+| **3. Full image coverage** | also set `UNSPLASH_ACCESS_KEY` and `PEXELS_API_KEY` | Cascade extends past Wikipedia/Commons to Unsplash and Pexels for words those sources don't cover |
 
-Bucket invariant: every `(category × difficulty)` should have at least one entry. Difficulty buckets: easy 3–5, medium 6–8, hard 9+ letters (non-letter chars stripped).
+`VITE_KID_FACT_ENABLED` is client-side and inlined at build time, so flipping it requires a redeploy. The other keys are server-side secrets evaluated per request by the Pages Functions.
 
-To add a curated photo: drop into `public/images/<category>/<slug>/`, then add the filename to `src/data/images-manifest.json`.
+For local development with Functions, copy `.env.example` → `.dev.vars` and run `npm run pages:dev`.
+
+## Architecture notes
+
+For deeper context on the state machine, image cascade, mascot system, and conventions, see [CLAUDE.md](CLAUDE.md).
+
+## License
+
+[MIT](LICENSE) © 2026 Vijeth Naravi Hegde
+
+## Credits
+
+- Words and facts via [Wikipedia](https://en.wikipedia.org) and [Wikimedia Commons](https://commons.wikimedia.org) under [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/).
+- Optional image sources: [Unsplash](https://unsplash.com), [Pexels](https://www.pexels.com).
+- Optional fact rewriting: [Anthropic Claude API](https://www.anthropic.com).
