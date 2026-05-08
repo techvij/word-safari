@@ -18,7 +18,7 @@ const THEMES: Record<Category, Theme> = {
     selected: 'from-sky-400 via-sky-500 to-sky-600 text-white ring-sky-200 dark:ring-sky-400/40',
     halo: 'rgba(14,165,233,0.55)',
   },
-  sports: {
+  fruits: {
     idle: 'from-sunset-50 via-white to-sunset-100 dark:from-sunset-950/40 dark:via-slate-900 dark:to-sunset-900/40 hover:ring-sunset-300 dark:hover:ring-sunset-700',
     selected: 'from-sunset-400 via-sunset-500 to-sunset-600 text-white ring-sunset-200 dark:ring-sunset-400/40',
     halo: 'rgba(249,115,22,0.55)',
@@ -37,7 +37,7 @@ const THEMES: Record<Category, Theme> = {
 
 const CATEGORIES: { id: Category; label: string; emoji: string }[] = [
   { id: 'cities', label: 'Cities', emoji: '🏙️' },
-  { id: 'sports', label: 'Sports', emoji: '🥋' },
+  { id: 'fruits', label: 'Sports', emoji: '🍍' },
   { id: 'animals', label: 'Animals', emoji: '🐼' },
   { id: 'foods', label: 'Foods', emoji: '🍜' },
 ];
