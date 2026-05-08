@@ -8,9 +8,9 @@ const CATEGORY_DISPLAY: Record<Category, { emoji: string; label: string; from: s
     to: 'to-sky-200',
     glow: 'ring-sky-200 dark:ring-sky-700/50 dark:from-sky-900/40 dark:to-sky-800/40 dark:text-sky-100',
   },
-  fruits: {
-    emoji: '🍍',
-    label: 'Fruits',
+  sports: {
+    emoji: '🥋',
+    label: 'Sports',
     from: 'from-sunset-100',
     to: 'to-sunset-200',
     glow: 'ring-sunset-200 dark:ring-sunset-700/50 dark:from-sunset-900/40 dark:to-sunset-800/40 dark:text-sunset-100',
