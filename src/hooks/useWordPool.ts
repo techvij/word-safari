@@ -45,6 +45,7 @@ const NOISE_DENYLIST: Record<Category, ReadonlySet<string>> = {
   cities: new Set<string>(),
   animals: new Set<string>(),
   foods: new Set<string>(),
+  fruits: new Set<string>(),
   sports: new Set<string>([
     // Indian
     'Katar',
