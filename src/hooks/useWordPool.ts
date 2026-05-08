@@ -33,7 +33,7 @@ const ASIAN_CATEGORIES: Record<Category, string[]> = {
     'Indonesian_cuisine',
   ],
   animals: ['Mammals_of_Asia', 'Reptiles_of_Asia', 'Birds_of_Asia'],
-  fruits: ['Tropical_fruit', 'Fruits_originating_in_Asia', 'Southeast_Asian_fruits'],
+  fruits: ['Tropical_fruit', 'Edible_fruits', 'Southeast_Asian_fruits', 'Fruit_vegetables'],
 };
 
 // Per-category denylist for Wikipedia titles that pass the structural filter
