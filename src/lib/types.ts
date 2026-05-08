@@ -1,4 +1,4 @@
-export type Category = 'cities' | 'sports' | 'animals' | 'foods';
+export type Category = 'cities' | 'fruits' | 'animals' | 'foods';
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export type MascotName = 'panda' | 'red-panda' | 'tiger';
 export type Phase = 'menu' | 'loading' | 'playing' | 'won' | 'lost';

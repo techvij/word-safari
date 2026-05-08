@@ -12,7 +12,7 @@ const RECENT_LIMIT = 5;
 
 const CATEGORY_EMOJI: Record<Category, string> = {
   cities: '🏙️',
-  sports: '🥋',
+  fruits: '🍍',
   animals: '🐼',
   foods: '🍜',
 };

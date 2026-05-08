@@ -1,6 +1,6 @@
 # Word Safari
 
-A kid-friendly word-guessing game (ages 6–12), themed around Asia. Pick a category — cities, sports, animals, or foods — pick a difficulty, and guess the word one letter at a time before the panda runs out of chances.
+A kid-friendly word-guessing game (ages 6–12), themed around Asia. Pick a category — cities, fruits, animals, or foods — pick a difficulty, and guess the word one letter at a time before the panda runs out of chances.
 
 > **No static word list.** Words, facts, and pictures are pulled live from Wikipedia + Wikimedia Commons every round.
 

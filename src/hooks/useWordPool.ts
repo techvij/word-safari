@@ -33,7 +33,7 @@ const ASIAN_CATEGORIES: Record<Category, string[]> = {
     'Indonesian_cuisine',
   ],
   animals: ['Mammals_of_Asia', 'Reptiles_of_Asia', 'Birds_of_Asia'],
-  sports: ['Chinese_martial_arts', 'Japanese_martial_arts', 'Korean_martial_arts', 'Indian_martial_arts'],
+  fruits: ['Tropical_fruit', 'Fruits_originating_in_Asia', 'Southeast_Asian_fruits'],
 };
 
 // Per-category denylist for Wikipedia titles that pass the structural filter
@@ -45,46 +45,7 @@ const NOISE_DENYLIST: Record<Category, ReadonlySet<string>> = {
   cities: new Set<string>(),
   animals: new Set<string>(),
   foods: new Set<string>(),
-  sports: new Set<string>([
-    // Indian
-    'Katar',
-    'Urumi',
-    'Talwar',
-    'Madu',
-    'Khanda',
-    'Chakram',
-    'Aruval',
-    'Lathi',
-    'Valari',
-    // Japanese
-    'Katana',
-    'Wakizashi',
-    'Naginata',
-    'Bokken',
-    'Shuriken',
-    'Sai',
-    'Tonfa',
-    'Kama',
-    'Nunchaku',
-    'Kusarigama',
-    'Tanto',
-    'Bo',
-    'Jo',
-    'Yumi',
-    // Chinese
-    'Jian',
-    'Dao',
-    'Hudiedao',
-    'Liuyedao',
-    'Zhanmadao',
-    'Guandao',
-    'Podao',
-    'Niuweidao',
-    // Korean
-    'Wolto',
-    'Hyeopdo',
-    'Geom',
-  ]),
+  fruits: new Set<string>(),
 };
 
 /** Reject Wikipedia titles that aren't fun "guess the word" candidates. */
