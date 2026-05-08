@@ -46,46 +46,6 @@ const NOISE_DENYLIST: Record<Category, ReadonlySet<string>> = {
   animals: new Set<string>(),
   foods: new Set<string>(),
   fruits: new Set<string>(),
-  sports: new Set<string>([
-    // Indian
-    'Katar',
-    'Urumi',
-    'Talwar',
-    'Madu',
-    'Khanda',
-    'Chakram',
-    'Aruval',
-    'Lathi',
-    'Valari',
-    // Japanese
-    'Katana',
-    'Wakizashi',
-    'Naginata',
-    'Bokken',
-    'Shuriken',
-    'Sai',
-    'Tonfa',
-    'Kama',
-    'Nunchaku',
-    'Kusarigama',
-    'Tanto',
-    'Bo',
-    'Jo',
-    'Yumi',
-    // Chinese
-    'Jian',
-    'Dao',
-    'Hudiedao',
-    'Liuyedao',
-    'Zhanmadao',
-    'Guandao',
-    'Podao',
-    'Niuweidao',
-    // Korean
-    'Wolto',
-    'Hyeopdo',
-    'Geom',
-  ]),
 };
 
 /** Reject Wikipedia titles that aren't fun "guess the word" candidates. */
