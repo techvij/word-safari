@@ -31,7 +31,7 @@ npm run lint         # tsc --noEmit
 npm run pages:dev    # wrangler pages dev — needed to test Cloudflare Functions
 ```
 
-There is no static word list to maintain. To add Asia content, edit the `ASIAN_CATEGORIES` map in [`src/hooks/useWordPool.ts`](src/hooks/useWordPool.ts) — point at any Wikipedia category whose members are guessable single-or-double-word titles.
+There is no static word list to maintain. To add or change content, edit the `ASIAN_CATEGORIES` map in [`src/hooks/useWordPool.ts`](src/hooks/useWordPool.ts) — point at any Wikipedia category whose members are guessable single-or-double-word titles. If a category's Wikipedia source contains noisy titles (e.g. biological names, list articles), add them to the `NOISE_DENYLIST` in the same file.
 
 ## Deploy on Cloudflare Pages
 

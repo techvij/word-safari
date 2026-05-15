@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-**Word Safari** — a React + TypeScript rebuild of the kids' word-guessing game (originally vanilla HTML/CSS/JS at `../hangman/`). Theme: Asian cities, sports, animals, foods. The two repos are independent — this one does not import from the parent.
+**Word Safari** — a React + TypeScript rebuild of the kids' word-guessing game (originally vanilla HTML/CSS/JS at `../hangman/`). Theme: Asian cities, fruits, animals, foods. The two repos are independent — this one does not import from the parent.
 
 - **Repo**: <https://github.com/techvij/word-safari> (public, MIT)
 - **Default branch**: `main`
@@ -31,9 +31,20 @@ All game state lives in one `useReducer`. Phases: `'menu' | 'loading' | 'playing
 
 ### Dynamic word pool (no static list)
 
-`src/hooks/useWordPool.ts` declares `ASIAN_CATEGORIES` — a map from game category to a list of Wikipedia category slugs (`Capital_cities_in_Asia`, `Mammals_of_Asia`, `Japanese_cuisine`, `Korean_martial_arts`, etc.). On category select, `useWordPool` calls Wikipedia's `categorymembers` endpoint via `src/lib/wikipedia.ts`, merges + dedupes results, and runs every title through `isGuessable()` (rejects list/overview pages, parenthetical disambigs, multi-word titles >3 words, etc.). Pool is cached in TanStack Query (24h staleTime).
+`src/hooks/useWordPool.ts` declares `ASIAN_CATEGORIES` — a map from game category to a list of Wikipedia category slugs:
 
-Per-round, `startRound` calls `fetchSummary(title)` to pull the extract + image. **All Wikipedia API calls are CORS-friendly and key-free** — no proxy needed. Every fetch sends an `Api-User-Agent` header per Wikipedia's User-Agent policy (browsers can't override the actual `User-Agent` from `fetch()`); the value is hardcoded in `src/lib/wikipedia.ts`, `src/lib/images/wikipedia.ts`, and `src/lib/images/commons.ts` — keep them in sync.
+| Category | Wikipedia slugs used |
+|---|---|
+| cities | `Capital_cities_in_Asia`, `Cities_in_Indonesia`, `Cities_in_China`, `Cities_in_Vietnam`, `Cities_in_Japan`, `Cities_in_India`, `Cities_in_South_Korea`, `Cities_in_the_Philippines` |
+| fruits | `Tropical_fruit`, `Edible_fruits`, `Southeast_Asian_fruits`, `Fruit_vegetables` |
+| animals | `Mammals_of_Asia`, `Reptiles_of_Asia`, `Birds_of_Asia` |
+| foods | `Japanese_cuisine`, `Chinese_cuisine`, `Indian_cuisine`, `Korean_cuisine`, `Thai_cuisine`, `Vietnamese_cuisine`, `Indonesian_cuisine` |
+
+On category select, `useWordPool` calls Wikipedia's `categorymembers` endpoint via `src/lib/wikipedia.ts`, merges + dedupes results, and runs every title through `isGuessable(title, category)` (rejects list/overview pages, parenthetical disambigs, multi-word titles >3 words, non-ASCII, numbers, etc.). Pool is cached in TanStack Query (24h staleTime).
+
+`NOISE_DENYLIST` in the same file is a per-category `ReadonlySet<string>` for titles that pass the structural filter but aren't in the spirit of the category (e.g. weapon articles inside martial-arts categories). Currently only `sports` had entries — that category has since been replaced by `fruits`, whose denylist is empty. Add entries here as you spot noisy titles during play.
+
+Per-round, `startRound` calls `fetchSummary(title)` to pull the extract + image. **All Wikipedia API calls are CORS-friendly and key-free** — no proxy needed. Every fetch sends an `Api-User-Agent` header per Wikipedia's User-Agent policy (browsers can't override the actual `User-Agent` from `fetch()`); the value is hardcoded in `src/lib/wikipedia.ts`, `src/lib/images/wikipedia.ts`, and `src/lib/images/commons.ts` — keep them in sync. All fetches use `AbortSignal.timeout(8000)` so offline/slow-network states surface as an error banner instead of hanging indefinitely.
 
 ### Cascading image resolver (`src/hooks/useImageResolver.ts` + `src/lib/images/*.ts`)
 
